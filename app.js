@@ -34,7 +34,7 @@ if ('development' == app.get('env')) {
 app.get('/', routes.index);
 
 // ポートをリッスンする
-server.listen(app.get('port'));
+server.listen(app.get('port'), '::');
 console.log('Listening...');
 
 // iBeaconの検索
