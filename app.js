@@ -44,37 +44,49 @@ Bleacon.startScanning();
 
 var devSet = new sets.Set();
 var devMap = new Object();
-var currentDevice = new Array();
+var currentDevice = [];
 
 // iBeaconの検索
 Bleacon.on('discover', function(bleacon) {
 
     // 見つかったデバイスのkeyを作成
-    var key = bleacon.name + bleacon.uuid + bleacon.major;
+    var key = bleacon.name + bleacon.uuid + bleacon.major + bleacon.minor;
 
     // 同じデバイスが無ければ追加
     if (!devSet.has(key)) {
+
+        // far, unknownの場合は登録しない
+        if (bleacon.proximity === 'far' || bleacon.proximity === 'unknown') {
+            return;
+        }
+
         devSet.add(key);
         devMap[key] = bleacon.proximity;
+        bleacon.key = key;
         currentDevice.push(bleacon);
     }
     // 同じデバイスがあった場合
     else {
         // Unknownになった場合は削除してしまおう
-        if (bleacon.proximity === 'unknown') {
-            console.log(key + ': ' + devMap[key]  + ' to '+ bleacon.proximity);
+//        if (bleacon.proximity === 'unknown') {
+        if (bleacon.proximity === 'far' || bleacon.proximity === 'unknown') {
+            console.log(key + ': ' + devMap[key]  + ' to '+ bleacon.proximity + ': delete');
             devSet.remove(key);
-            devMap[key].remove();
+            delete devMap[key];
+            for ( var i = 0; i < currentDevice.length; ++i ) {
+                if (currentDevice[i].key === key) {
+                    console.log('delete');
+                    currentDevice.splice(i, 1);
+                }
+            }
         }
         // デバイスのProximityが変更された
-        if (devMap[key] !== bleacon.proximity) {
+        else if (devMap[key] !== bleacon.proximity) {
             console.log(key + ': ' + devMap[key]  + ' to '+ bleacon.proximity);
             devMap[key] = bleacon.proximity;
         }
     }
-
     // 現在の検索済みのデバイスを表示
-//    console.log(currentDevice.length);
 //    console.dir(currentDevice);
 });
 
